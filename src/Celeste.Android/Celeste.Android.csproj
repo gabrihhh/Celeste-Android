@@ -43,6 +43,8 @@
 		<!-- FMOD 1.10.14 (mesma versão dos .bank do jogo). Proprietário: fica fora do git. -->
 		<AndroidNativeLibrary Include="$(RepoRoot)fmod\libs\android-arm64\*.so" Abi="arm64-v8a" />
 		<AndroidLibrary Include="$(RepoRoot)fmod\libs\android-arm64\fmod.jar" Bind="true" />
+		<!-- Helper nativo do MonoMod (FlushICache) — camada A.2; ~10 KB, incondicional. -->
+		<AndroidNativeLibrary Include="$(RepoRoot)native\libs\android-arm64\libAndroidNativeHelper.so" Abi="arm64-v8a" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(HasGameIcon)' == 'true'">
 		<AndroidResource Include="$(GameArtDir)icon\res\**\*" Link="Resources\%(RecursiveDir)%(Filename)%(Extension)" />

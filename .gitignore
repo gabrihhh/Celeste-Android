@@ -33,3 +33,7 @@ obj/
 # Artefatos do Everest coletados do PC + saída do patch (spike camada A)
 /everest/
 /out-everest/
+
+# Fork do MonoMod (clone externo grande) + helper nativo buildado (camada A.2)
+/external/MonoMod/
+/native/libs/
