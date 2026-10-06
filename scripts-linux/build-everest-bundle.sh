@@ -19,14 +19,20 @@ cp -f "$OUT/everest-libs/"*.dll "$BUNDLE/libs/"
 # trocar SÓ o MonoMod.Core.dll pelo forkado (com AndroidSystem) — única mudança
 cp -f "$CORE_FORK" "$BUNDLE/libs/MonoMod.Core.dll"
 
-# gamedir/: arquivos que o Everest espera AO LADO do Celeste.dll (no gameDir) —
-# runtime rules (Celeste.Mod.mm.dll) + reference assemblies do .NET 8 (pro Relinker de code mods).
+# gamedir/: tudo que o Relinker do Everest procura AO LADO do Celeste.dll (no gameDir):
+#  - todos os assemblies do jogo (libs: MMHOOK, MonoMod.*, Cecil, Yaml, Celeste.Mod.mm, ...)
+#  - FNA 24.1.0.0 (versão que os mods referenciam) + Steamworks.NET stub do port
+#  - reference assemblies do .NET 8 (pro MonoMod resolver os tipos do framework)
 mkdir -p "$BUNDLE/gamedir"
-cp -f "$BUNDLE/libs/Celeste.Mod.mm.dll" "$BUNDLE/gamedir/"
+cp -f "$BUNDLE/libs"/*.dll "$BUNDLE/gamedir/"
+FNA_SRC="$HOME/.steam/debian-installation/steamapps/common/Celeste/FNA.dll"
+[ -f "$FNA_SRC" ] && cp -f "$FNA_SRC" "$BUNDLE/gamedir/FNA.dll" || echo "AVISO: FNA.dll (24.1.0.0) não achada"
+STEAM_SRC="$(find "$REPO/src/Steamworks.NET/bin" -name Steamworks.NET.dll 2>/dev/null | head -1)"
+[ -n "$STEAM_SRC" ] && cp -f "$STEAM_SRC" "$BUNDLE/gamedir/Steamworks.NET.dll" || echo "AVISO: Steamworks.NET.dll stub não achado"
 REFDIR="$(find "$HOME/.dotnet/packs/Microsoft.NETCore.App.Ref" -type d -path '*/ref/net8.0' 2>/dev/null | sort | tail -1)"
 if [ -n "$REFDIR" ]; then
   cp -f "$REFDIR"/*.dll "$BUNDLE/gamedir/"
-  echo "ref assemblies net8.0: $(ls "$BUNDLE/gamedir"/*.dll | wc -l) dlls"
+  echo "gamedir: $(ls "$BUNDLE/gamedir"/*.dll | wc -l) dlls (libs + FNA + Steamworks + refs)"
 else
   echo "AVISO: ref pack net8.0 não encontrado — code mods não vão relinkar"
 fi
