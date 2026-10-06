@@ -36,11 +36,15 @@ namespace CelesteAndroid.Patcher
 			modder.MapDependencies();
 			modder.AutoPatch();
 
-			// O Celeste.exe vem marcado como x86 (32BITREQUIRED); em ARM64/x64 isso impede o carregamento.
+			// O Celeste.exe clássico vem marcado x86 (32BITREQUIRED), o que impede o carregamento em
+			// ARM64/x64. O Celeste.dll do Everest já é AnyCPU — só mexe se o bit estiver presente.
 			ModuleDefinition module = modder.Module;
-			module.Attributes &= ~(ModuleAttributes.Required32Bit | ModuleAttributes.Preferred32Bit);
-			module.Attributes |= ModuleAttributes.ILOnly;
-			module.Architecture = TargetArchitecture.I386;
+			if ((module.Attributes & ModuleAttributes.Required32Bit) != 0)
+			{
+				module.Attributes &= ~(ModuleAttributes.Required32Bit | ModuleAttributes.Preferred32Bit);
+				module.Attributes |= ModuleAttributes.ILOnly;
+				module.Architecture = TargetArchitecture.I386;
+			}
 
 			modder.Write();
 			log($"Celeste patcheado: {outputDll}");
