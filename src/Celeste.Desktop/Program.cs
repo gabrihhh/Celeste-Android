@@ -13,6 +13,24 @@ namespace CelesteAndroid.Desktop
 		public static int Main(string[] args)
 		{
 			string hostDir = AppContext.BaseDirectory;
+
+			// Spike Everest (camada A): patcheia um Celeste.dll do Everest (em vez do Celeste.exe) e sai.
+			int ei = Array.IndexOf(args, "--everest-input");
+			if (ei >= 0 && ei + 1 < args.Length)
+			{
+				int oi = Array.IndexOf(args, "--out");
+				if (oi < 0 || oi + 1 >= args.Length)
+					throw new ArgumentException("--everest-input exige --out <dll>");
+				string everestIn = Path.GetFullPath(args[ei + 1]);
+				string outDll = Path.GetFullPath(args[oi + 1]);
+				string mmInput = Path.Combine(hostDir, "Celeste.Android.mm.dll");
+				// deps: o próprio hostDir (FNA/Steamworks do port + a .mm) e o runtime .NET.
+				CelestePatcher.Patch(everestIn, mmInput, outDll,
+					new[] { hostDir, RuntimeEnvironment.GetRuntimeDirectory() });
+				Console.WriteLine(outDll);
+				return 0;
+			}
+
 			string gameDir = FindGameDir(args);
 			string patchedDll = Path.Combine(hostDir, "patched", "Celeste.dll");
 			string modDll = Path.Combine(hostDir, "Celeste.Android.mm.dll");
