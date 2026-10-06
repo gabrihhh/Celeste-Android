@@ -16,4 +16,8 @@
 		</Reference>
 		<ProjectReference Include="..\..\external\FNA\FNA.Core.csproj" Private="false" />
 	</ItemGroup>
+	<!-- Spike Everest (camada A): o pillarbox mexe em Engine.RenderCore e conflita com o Everest. -->
+	<ItemGroup Condition="'$(Spike)' == 'true'">
+		<Compile Remove="Monocle/patch_Engine.cs" />
+	</ItemGroup>
 </Project>
