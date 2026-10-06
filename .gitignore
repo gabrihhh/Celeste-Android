@@ -29,3 +29,7 @@ obj/
 
 # Arte oficial fornecida pelo usuário (logo etc.)
 /art/
+
+# Artefatos do Everest coletados do PC + saída do patch (spike camada A)
+/everest/
+/out-everest/
