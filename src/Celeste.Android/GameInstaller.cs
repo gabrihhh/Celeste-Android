@@ -51,6 +51,59 @@ namespace CelesteAndroid
 		public static bool IsEverestInstalled(Context context) =>
 			File.Exists(EverestPatchedDll(context)) && Directory.Exists(Path.Combine(GameDir(context), "Content"));
 
+		/// <summary>O APK traz o bundle do Everest nos assets (build com -p:BundleEverest=true).</summary>
+		public static bool HasEverestBundle(Context context) =>
+			context.Assets!.List("everest/patched")?.Contains("Celeste.dll") == true;
+
+		private static string? ReadAssetText(Context context, string assetPath)
+		{
+			try
+			{
+				using Stream s = context.Assets!.Open(assetPath);
+				using var r = new StreamReader(s);
+				return r.ReadToEnd().Trim();
+			}
+			catch { return null; }
+		}
+
+		/// <summary>Extrair o bundle? Sim se há bundle + jogo base + a versão difere da já extraída (força update).</summary>
+		public static bool ShouldExtractEverest(Context context)
+		{
+			if (!HasEverestBundle(context) || !IsInstalled(context))
+				return false;
+			string? bundleId = ReadAssetText(context, "everest/libs/bundle.id");
+			string idFile = Path.Combine(EverestLibsDir(context), "bundle.id");
+			string? installedId = File.Exists(idFile) ? File.ReadAllText(idFile).Trim() : null;
+			return bundleId != installedId;
+		}
+
+		/// <summary>Extrai assets/everest/{patched,libs} → files/patched-everest e files/everest-libs.</summary>
+		public void ExtractEverestBundle()
+		{
+			progress("Preparando o Everest…", -1);
+			CopyAssetTree("everest/patched", Path.GetDirectoryName(EverestPatchedDll(context))!);
+			CopyAssetTree("everest/libs", EverestLibsDir(context));
+		}
+
+		private void CopyAssetTree(string assetDir, string destDir)
+		{
+			Directory.CreateDirectory(destDir);
+			foreach (string name in context.Assets!.List(assetDir) ?? Array.Empty<string>())
+			{
+				string assetPath = assetDir + "/" + name;
+				if ((context.Assets.List(assetPath)?.Length ?? 0) == 0)
+				{
+					using Stream input = context.Assets.Open(assetPath);
+					using FileStream output = File.Create(Path.Combine(destDir, name));
+					input.CopyTo(output);
+				}
+				else
+				{
+					CopyAssetTree(assetPath, Path.Combine(destDir, name));
+				}
+			}
+		}
+
 		/// <summary>APK pessoal: o jogo vem nos assets (build com -p:EmbedGame=true).</summary>
 		public static bool HasEmbeddedGame(Context context) =>
 			context.Assets!.List(GameAssetsRoot)?.Contains("Celeste.exe") == true;

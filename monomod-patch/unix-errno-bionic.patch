@@ -1,0 +1,28 @@
+diff --git a/src/MonoMod.Core/Interop/Unix.cs b/src/MonoMod.Core/Interop/Unix.cs
+index 92f3adb..342fcc5 100644
+--- a/src/MonoMod.Core/Interop/Unix.cs
++++ b/src/MonoMod.Core/Interop/Unix.cs
+@@ -42,7 +42,22 @@ namespace MonoMod.Core.Interop
+         [DllImport(LibC, CallingConvention = CallingConvention.Cdecl, EntryPoint = "__errno_location")]
+         public static extern unsafe int* __errno_location();
+ 
+-        public static unsafe int Errno => *__errno_location();
++        // Android (bionic libc) não expõe __errno_location; o símbolo é __errno.
++        [DllImport(LibC, CallingConvention = CallingConvention.Cdecl, EntryPoint = "__errno")]
++        public static extern unsafe int* __errno();
++
++        private static int errnoKind = -1; // -1 indefinido, 0 glibc (__errno_location), 1 bionic (__errno)
++
++        public static unsafe int Errno
++        {
++            get
++            {
++                if (errnoKind == 0) return *__errno_location();
++                if (errnoKind == 1) return *__errno();
++                try { int v = *__errno_location(); errnoKind = 0; return v; }
++                catch (EntryPointNotFoundException) { errnoKind = 1; return *__errno(); }
++            }
++        }
+ 
+         static Unix()
+         {

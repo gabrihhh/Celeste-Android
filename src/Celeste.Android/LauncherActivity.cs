@@ -97,6 +97,12 @@ namespace CelesteAndroid
 			{
 				RunInstall(installer => installer.ImportEmbedded());
 			}
+			// Bundle do Everest nos assets: extrai quando a versão do bundle difere da já extraída
+			// (exige o jogo base importado p/ o Content; re-extrai em updates do bundle).
+			else if (!busy && GameInstaller.ShouldExtractEverest(this))
+			{
+				RunJob(installer => { installer.ExtractEverestBundle(); return "✓  Everest pronto"; });
+			}
 		}
 
 		#region Layout

@@ -16,11 +16,15 @@ fi
 # 2) Submódulos (iced) — faltam se o clone foi sem --recurse-submodules.
 git -C "$MM" submodule update --init --recursive
 
-# 2b) Aplicar o patch versionado (AndroidSystem.cs + registro no PlatformTriple).
+# 2b) Aplicar os patches versionados (AndroidSystem.cs + PlatformTriple + errno bionic).
 cp -f "$REPO/monomod-patch/AndroidSystem.cs" "$MM/src/MonoMod.Core/Platforms/Systems/AndroidSystem.cs"
 if grep -q 'OSKind.Android => throw new NotImplementedException()' "$MM/src/MonoMod.Core/Platforms/PlatformTriple.cs"; then
   sed -i 's#OSKind.Android => throw new NotImplementedException(),#OSKind.Android => new Systems.AndroidSystem(),#' \
     "$MM/src/MonoMod.Core/Platforms/PlatformTriple.cs"
+fi
+# errno: bionic usa __errno (não __errno_location). Aplica só se ainda não aplicado.
+if ! grep -q 'EntryPoint = "__errno"' "$MM/src/MonoMod.Core/Interop/Unix.cs"; then
+  git -C "$MM" apply "$REPO/monomod-patch/unix-errno-bionic.patch"
 fi
 
 # 3) Build só do net8.0 (buildar todos os TFMs puxa o iced p/ net452, que quebra). Everest usa net8.0.

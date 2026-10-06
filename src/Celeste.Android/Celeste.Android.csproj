@@ -68,6 +68,11 @@
 		<AndroidAsset Include="$(CelesteGameDir)Celeste.exe" LogicalName="game/Celeste.exe" />
 		<AndroidAsset Include="$(CelesteGameDir)Content\**\*" LogicalName="game/Content/%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
+	<!-- -p:BundleEverest=true: bundle do Everest (Celeste.dll Everest + libs c/ MonoMod forkado) nos assets. -->
+	<ItemGroup Condition="'$(BundleEverest)' == 'true'">
+		<AndroidAsset Include="$(RepoRoot)out-everest\assets\everest\patched\Celeste.dll" LogicalName="everest/patched/Celeste.dll" />
+		<AndroidAsset Include="$(RepoRoot)out-everest\assets\everest\libs\**\*" LogicalName="everest/libs/%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\..\external\FNA\FNA.Core.csproj" />
 		<ProjectReference Include="..\Steamworks.NET\Steamworks.NET.csproj" />
