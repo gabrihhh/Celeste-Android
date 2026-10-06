@@ -29,6 +29,7 @@ namespace CelesteAndroid
 	{
 		public const string LogTag = "CelesteAndroid";
 		public const string ExtraDriver = "driver";
+		public const string ExtraEverest = "everest";
 
 		// O Java carrega SDL3 e FMOD (o FMOD precisa estar carregado antes do FMOD.init);
 		// FNA3D/FAudio são carregados pelo .NET via DllImport.
@@ -64,9 +65,11 @@ namespace CelesteAndroid
 
 			try
 			{
-				if (GameInstaller.IsInstalled(this))
+				bool everest = Intent?.GetBooleanExtra(ExtraEverest, false) ?? false;
+				bool installed = everest ? GameInstaller.IsEverestInstalled(this) : GameInstaller.IsInstalled(this);
+				if (installed)
 				{
-					CelesteLauncher.Run(this);
+					CelesteLauncher.Run(this, everest);
 				}
 				else
 				{

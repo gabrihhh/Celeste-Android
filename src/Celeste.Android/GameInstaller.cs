@@ -41,9 +41,15 @@ namespace CelesteAndroid
 		public static string UserDir(Context context) => Path.Combine(Files(context), "userdata");
 		public static string EverestLibsDir(Context context) => Path.Combine(Files(context), "everest-libs");
 		public static string ModsDir(Context context) => Path.Combine(GameDir(context), "Mods");
+		/// <summary>Celeste.dll do Everest (patcheado no PC), separado do vanilla.</summary>
+		public static string EverestPatchedDll(Context context) => Path.Combine(Files(context), "patched-everest", "Celeste.dll");
 
 		public static bool IsInstalled(Context context) =>
 			File.Exists(PatchedDll(context)) && Directory.Exists(Path.Combine(GameDir(context), "Content"));
+
+		/// <summary>Modo Everest disponível: o dll do Everest foi empurrado e o Content existe.</summary>
+		public static bool IsEverestInstalled(Context context) =>
+			File.Exists(EverestPatchedDll(context)) && Directory.Exists(Path.Combine(GameDir(context), "Content"));
 
 		/// <summary>APK pessoal: o jogo vem nos assets (build com -p:EmbedGame=true).</summary>
 		public static bool HasEmbeddedGame(Context context) =>

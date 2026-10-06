@@ -43,6 +43,7 @@ namespace CelesteAndroid
 		private LinearLayout panel = null!;
 		private TextView status = null!;
 		private Button play = null!;
+		private Button playMods = null!;
 		private Button openFolder = null!;
 		private TextView openZip = null!;
 		private TextView importSaves = null!;
@@ -149,9 +150,13 @@ namespace CelesteAndroid
 			status = Text("", 14, Color.Argb(220, 255, 255, 255), TypefaceStyle.Normal);
 			panel.AddView(status, Margins(top: 10));
 
-			play = PillButton("PLAY", filled: true);
-			play.Click += (_, _) => Play();
+			play = PillButton("JOGAR", filled: true);
+			play.Click += (_, _) => Play(everest: false);
 			panel.AddView(play, new LinearLayout.LayoutParams(Dp(260), Dp(50)) { TopMargin = Dp(14) });
+
+			playMods = PillButton("MODS · Everest (beta)", filled: false);
+			playMods.Click += (_, _) => Play(everest: true);
+			panel.AddView(playMods, new LinearLayout.LayoutParams(Dp(260), Dp(44)) { TopMargin = Dp(8) });
 
 			openFolder = PillButton("Open game files", filled: false);
 			openFolder.Click += (_, _) => PickFolder();
@@ -278,6 +283,9 @@ namespace CelesteAndroid
 			bool installed = GameInstaller.IsInstalled(this);
 			play.Enabled = installed && !busy;
 			play.Alpha = play.Enabled ? 1f : 0.4f;
+			// Modo Everest: habilitado só quando o dll do Everest foi empurrado (files/patched-everest/).
+			playMods.Enabled = GameInstaller.IsEverestInstalled(this) && !busy;
+			playMods.Alpha = playMods.Enabled ? 1f : 0.4f;
 			openFolder.Enabled = !busy;
 			openZip.Enabled = !busy;
 			importSaves.Enabled = !busy;
@@ -293,12 +301,13 @@ namespace CelesteAndroid
 			driverToggle.Text = "Graphics: " + (Prefs.GetString(PrefDriver, "") == "OpenGL" ? "OpenGL ES" : "Vulkan");
 		}
 
-		private void Play()
+		private void Play(bool everest)
 		{
 			var intent = new Intent(this, typeof(GameActivity));
 			string? driver = Prefs.GetString(PrefDriver, "");
 			if (!string.IsNullOrEmpty(driver))
 				intent.PutExtra(GameActivity.ExtraDriver, driver);
+			intent.PutExtra(GameActivity.ExtraEverest, everest);
 			StartActivity(intent);
 		}
 
