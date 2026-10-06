@@ -48,9 +48,14 @@ namespace CelesteAndroid
 			Assembly celeste = AssemblyLoadContext.Default.LoadFromAssemblyPath(dll);
 
 			// Engine.AssemblyDirectory vem de Assembly.Location, que não aponta para o jogo.
+			// No modo Everest, o PathGame do Everest = dir do Location (canônico /data/data/...); alinhamos
+			// o Engine ao mesmo caminho para o Content e o PathContentOrig baterem (senão o parser de idioma estoura).
+			string assemblyDir = everest
+				? (Path.GetDirectoryName(celeste.Location) is { Length: > 0 } loc ? loc : gameDir)
+				: gameDir;
 			celeste.GetType("Monocle.Engine", throwOnError: true)!
 				.GetField("AssemblyDirectory", BindingFlags.NonPublic | BindingFlags.Static)!
-				.SetValue(null, gameDir);
+				.SetValue(null, assemblyDir);
 
 			// Vanilla: Main é nonpublic. Everest torna Main público (embrulha o orig_Main) → incluir Public.
 			MethodInfo main = celeste.GetType("Celeste.Celeste", throwOnError: true)!

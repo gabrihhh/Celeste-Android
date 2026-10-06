@@ -41,8 +41,9 @@ namespace CelesteAndroid
 		public static string UserDir(Context context) => Path.Combine(Files(context), "userdata");
 		public static string EverestLibsDir(Context context) => Path.Combine(Files(context), "everest-libs");
 		public static string ModsDir(Context context) => Path.Combine(GameDir(context), "Mods");
-		/// <summary>Celeste.dll do Everest (patcheado no PC), separado do vanilla.</summary>
-		public static string EverestPatchedDll(Context context) => Path.Combine(Files(context), "patched-everest", "Celeste.dll");
+		/// <summary>Celeste.dll do Everest DENTRO do gameDir (junto do Content), para que o
+		/// Everest.PathGame (dir do dll via Assembly.Location) == dir do Content → caminhos consistentes.</summary>
+		public static string EverestPatchedDll(Context context) => Path.Combine(GameDir(context), "Celeste.dll");
 
 		public static bool IsInstalled(Context context) =>
 			File.Exists(PatchedDll(context)) && Directory.Exists(Path.Combine(GameDir(context), "Content"));
@@ -71,6 +72,9 @@ namespace CelesteAndroid
 		{
 			if (!HasEverestBundle(context) || !IsInstalled(context))
 				return false;
+			if (!IsEverestInstalled(context))
+				return true;   // dll do Everest ausente → extrair
+			// já extraído: re-extrai só se a versão do bundle mudou
 			string? bundleId = ReadAssetText(context, "everest/libs/bundle.id");
 			string idFile = Path.Combine(EverestLibsDir(context), "bundle.id");
 			string? installedId = File.Exists(idFile) ? File.ReadAllText(idFile).Trim() : null;
