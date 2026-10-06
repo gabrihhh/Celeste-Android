@@ -96,29 +96,53 @@ namespace MonoMod.Core.Platforms.Systems
         [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool FlushICache(IntPtr start, IntPtr end);
 
+        // MonoMod.Core desativa o runtime marshalling → P/Invokes só com tipos blittable (byte*, não string).
+        [DllImport("libc", EntryPoint = "open", CallingConvention = CallingConvention.Cdecl)]
+        private static extern unsafe int c_open(byte* path, int flags);
+        [DllImport("libc", EntryPoint = "pwrite", CallingConvention = CallingConvention.Cdecl)]
+        private static extern unsafe nint c_pwrite(int fd, void* buf, nuint count, nint offset);
+        [DllImport("libc", EntryPoint = "close", CallingConvention = CallingConvention.Cdecl)]
+        private static extern int c_close(int fd);
+
+        // Escreve em memória RX sem mexer na proteção (via /proc/self/mem, que ignora W^X).
+        // Preserva o gerenciamento das páginas de código do Mono (que as mantém graváveis).
+        private static unsafe bool WriteViaProcMem(IntPtr addr, ReadOnlySpan<byte> data)
+        {
+            int fd;
+            fixed (byte* pPath = "/proc/self/mem\0"u8)
+                fd = c_open(pPath, 2 /* O_RDWR */);
+            if (fd < 0)
+                return false;
+            try
+            {
+                fixed (byte* p = data)
+                    return c_pwrite(fd, p, (nuint)data.Length, (nint)addr) == data.Length;
+            }
+            finally { c_close(fd); }
+        }
+
         public unsafe void PatchData(PatchTargetKind patchKind, IntPtr patchTarget, ReadOnlySpan<byte> data, Span<byte> backup)
         {
             // TODO: should this be thread-safe? It definitely is not right now.
 
+            // backup: a página é legível (RX), lê direto.
+            var target = new Span<byte>((void*)patchTarget, data.Length);
+            _ = target.TryCopyTo(backup);
+
             if (patchKind == PatchTargetKind.Executable)
             {
-                ProtectRWX(patchTarget, data.Length);
+                // Android 16 impõe W^X e o Mono mantém suas páginas de código graváveis: mudar a proteção
+                // (RWX falha; RX quebra as escritas do Mono). Então escrevemos via /proc/self/mem, que
+                // ignora a proteção, SEM alterá-la, e damos flush de I-cache (obrigatório em ARM).
+                if (!WriteViaProcMem(patchTarget, data))
+                    MMDbgLog.Error($"WriteViaProcMem falhou (errno={Unix.Errno})");
+                if (!FlushICache(patchTarget, (IntPtr)(patchTarget.ToInt64() + data.Length)))
+                    MMDbgLog.Error("FlushICache retornou false");
             }
             else
             {
                 ProtectRW(patchTarget, data.Length);
-            }
-
-            var target = new Span<byte>((void*)patchTarget, data.Length);
-            // now we copy target to backup, then data to target, then flush the instruction cache
-            _ = target.TryCopyTo(backup);
-            data.CopyTo(target);
-
-            // ARM: sincronizar I-cache/D-cache após reescrever código executável.
-            if (patchKind == PatchTargetKind.Executable)
-            {
-                if (!FlushICache(patchTarget, (IntPtr)(patchTarget.ToInt64() + data.Length)))
-                    MMDbgLog.Error("FlushICache retornou false");
+                data.CopyTo(target);
             }
         }
 
@@ -142,6 +166,16 @@ namespace MonoMod.Core.Platforms.Systems
         {
             RoundToPageBoundary(ref addr, ref size);
             if (Unix.Mprotect(addr, (nuint)size, Unix.Protection.Read | Unix.Protection.Write | Unix.Protection.Execute) != 0)
+            {
+                throw new Win32Exception(Unix.Errno);
+            }
+        }
+
+        // W^X: executável sem escrita (Android rejeita R+W+X juntos).
+        private void ProtectRX(IntPtr addr, nint size)
+        {
+            RoundToPageBoundary(ref addr, ref size);
+            if (Unix.Mprotect(addr, (nuint)size, Unix.Protection.Read | Unix.Protection.Execute) != 0)
             {
                 throw new Win32Exception(Unix.Errno);
             }
