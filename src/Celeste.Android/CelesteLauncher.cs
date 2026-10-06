@@ -26,6 +26,17 @@ namespace CelesteAndroid
 			AppContext.SetData("APP_CONTEXT_BASE_DIRECTORY", gameDir + Path.DirectorySeparatorChar);
 			Environment.CurrentDirectory = gameDir;
 
+			// Deps do Everest (MMHOOK, MonoMod.*, YamlDotNet, Newtonsoft, DiscordGameSDK...) ficam em files/everest-libs/.
+			string libsDir = GameInstaller.EverestLibsDir(context);
+			AssemblyLoadContext.Default.Resolving += (ctx, name) =>
+			{
+				string candidate = Path.Combine(libsDir, name.Name + ".dll");
+				return File.Exists(candidate) ? ctx.LoadFromAssemblyPath(candidate) : null;
+			};
+
+			// O Everest espera uma pasta Mods/ (vazia nesta fase = vanilla).
+			Directory.CreateDirectory(GameInstaller.ModsDir(context));
+
 			Assembly celeste = AssemblyLoadContext.Default.LoadFromAssemblyPath(GameInstaller.PatchedDll(context));
 
 			// Engine.AssemblyDirectory vem de Assembly.Location, que não aponta para o jogo.
@@ -35,7 +46,8 @@ namespace CelesteAndroid
 
 			MethodInfo main = celeste.GetType("Celeste.Celeste", throwOnError: true)!
 				.GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static)!;
-			main.Invoke(null, new object[] { Array.Empty<string>() });
+			// --loglevel verbose: boot detalhado do Everest no logcat (equivale ao everest-launch.txt do desktop).
+			main.Invoke(null, new object[] { new[] { "--loglevel", "verbose" } });
 		}
 	}
 }

@@ -39,6 +39,8 @@ namespace CelesteAndroid
 		public static string PatchedDll(Context context) => Path.Combine(Files(context), "patched", "Celeste.dll");
 		public static string BackgroundPng(Context context) => Path.Combine(Files(context), "background.png");
 		public static string UserDir(Context context) => Path.Combine(Files(context), "userdata");
+		public static string EverestLibsDir(Context context) => Path.Combine(Files(context), "everest-libs");
+		public static string ModsDir(Context context) => Path.Combine(GameDir(context), "Mods");
 
 		public static bool IsInstalled(Context context) =>
 			File.Exists(PatchedDll(context)) && Directory.Exists(Path.Combine(GameDir(context), "Content"));
