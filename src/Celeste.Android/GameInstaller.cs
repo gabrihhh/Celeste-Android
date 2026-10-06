@@ -87,6 +87,8 @@ namespace CelesteAndroid
 			progress("Preparando o Everest…", -1);
 			CopyAssetTree("everest/patched", Path.GetDirectoryName(EverestPatchedDll(context))!);
 			CopyAssetTree("everest/libs", EverestLibsDir(context));
+			// runtime rules + reference assemblies ao lado do Celeste.dll (pro Relinker de code mods)
+			CopyAssetTree("everest/gamedir", GameDir(context));
 		}
 
 		#region Mods (import / list / uninstall)

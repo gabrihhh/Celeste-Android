@@ -19,8 +19,20 @@ cp -f "$OUT/everest-libs/"*.dll "$BUNDLE/libs/"
 # trocar SÓ o MonoMod.Core.dll pelo forkado (com AndroidSystem) — única mudança
 cp -f "$CORE_FORK" "$BUNDLE/libs/MonoMod.Core.dll"
 
-# marcador de versão do bundle (muda quando qualquer dll muda) → força re-extração no device
-( cd "$BUNDLE/libs" && sha256sum *.dll | sha256sum | cut -c1-16 ) > "$BUNDLE/libs/bundle.id"
+# gamedir/: arquivos que o Everest espera AO LADO do Celeste.dll (no gameDir) —
+# runtime rules (Celeste.Mod.mm.dll) + reference assemblies do .NET 8 (pro Relinker de code mods).
+mkdir -p "$BUNDLE/gamedir"
+cp -f "$BUNDLE/libs/Celeste.Mod.mm.dll" "$BUNDLE/gamedir/"
+REFDIR="$(find "$HOME/.dotnet/packs/Microsoft.NETCore.App.Ref" -type d -path '*/ref/net8.0' 2>/dev/null | sort | tail -1)"
+if [ -n "$REFDIR" ]; then
+  cp -f "$REFDIR"/*.dll "$BUNDLE/gamedir/"
+  echo "ref assemblies net8.0: $(ls "$BUNDLE/gamedir"/*.dll | wc -l) dlls"
+else
+  echo "AVISO: ref pack net8.0 não encontrado — code mods não vão relinkar"
+fi
+
+# marcador de versão (hash de TODO o bundle: patched + libs + gamedir) → força re-extração no device
+( cd "$BUNDLE" && find . -name '*.dll' | sort | xargs sha256sum | sha256sum | cut -c1-16 ) > "$BUNDLE/libs/bundle.id"
 
 echo "=== bundle montado em $BUNDLE ==="
 echo "patched: $(ls "$BUNDLE/patched")"

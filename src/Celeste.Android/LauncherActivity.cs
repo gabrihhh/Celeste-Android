@@ -347,8 +347,30 @@ namespace CelesteAndroid
 		protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
 		{
 			base.OnActivityResult(requestCode, resultCode, data);
-			Uri? uri = data?.Data;
-			if (resultCode != Result.Ok || uri == null)
+			if (resultCode != Result.Ok || data == null)
+				return;
+
+			if (requestCode == RequestMod)
+			{
+				var uris = new System.Collections.Generic.List<Uri>();
+				if (data.ClipData is { } clip)
+					for (int i = 0; i < clip.ItemCount; i++)
+						uris.Add(clip.GetItemAt(i)!.Uri!);
+				else if (data.Data is { } single)
+					uris.Add(single);
+				if (uris.Count == 0)
+					return;
+				RunJob(installer =>
+				{
+					foreach (Uri u in uris)
+						installer.ImportMod(u);
+					return $"✓  {uris.Count} mod(s) importado(s)! Abra MODS para carregar.";
+				});
+				return;
+			}
+
+			Uri? uri = data.Data;
+			if (uri == null)
 				return;
 			if (requestCode == RequestFolder)
 				RunInstall(installer => installer.ImportFolder(uri));
@@ -356,8 +378,6 @@ namespace CelesteAndroid
 				RunInstall(installer => installer.ImportZip(uri));
 			else if (requestCode == RequestSaves)
 				RunJob(installer => $"✓  Imported {installer.ImportSaves(uri)} save file(s)");
-			else if (requestCode == RequestMod)
-				RunJob(installer => { installer.ImportMod(uri); return "✓  Mod importado! Abra MODS para carregar."; });
 		}
 
 		private void ShowModsDialog()
@@ -399,6 +419,7 @@ namespace CelesteAndroid
 			intent.AddCategory(Intent.CategoryOpenable);
 			intent.SetType("*/*");
 			intent.PutExtra(Intent.ExtraMimeTypes, new[] { "application/zip", "application/x-zip-compressed", "application/octet-stream" });
+			intent.PutExtra(Intent.ExtraAllowMultiple, true);   // dá pra marcar vários .zip
 			StartActivityForResult(intent, RequestMod);
 		}
 
