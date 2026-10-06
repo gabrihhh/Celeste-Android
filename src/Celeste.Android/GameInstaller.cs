@@ -89,6 +89,55 @@ namespace CelesteAndroid
 			CopyAssetTree("everest/libs", EverestLibsDir(context));
 		}
 
+		#region Mods (import / list / uninstall)
+
+		/// <summary>Mods instalados (arquivos/pastas em Mods/, ignorando Cache e os .txt de controle).</summary>
+		public static string[] ListMods(Context context)
+		{
+			string dir = ModsDir(context);
+			if (!Directory.Exists(dir))
+				return Array.Empty<string>();
+			return Directory.EnumerateFileSystemEntries(dir)
+				.Select(p => Path.GetFileName(p)!)
+				.Where(n => n != "Cache" && !n.EndsWith(".txt", StringComparison.OrdinalIgnoreCase))
+				.OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+				.ToArray();
+		}
+
+		public static void UninstallMod(Context context, string name)
+		{
+			string path = Path.Combine(ModsDir(context), name);
+			if (File.Exists(path))
+				File.Delete(path);
+			else if (Directory.Exists(path))
+				Directory.Delete(path, recursive: true);
+		}
+
+		/// <summary>Copia o .zip de mod escolhido pelo usuário para Mods/.</summary>
+		public void ImportMod(Uri zipUri)
+		{
+			progress("Importando mod…", -1);
+			string name = QueryDisplayName(zipUri) ?? "mod.zip";
+			if (!name.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+				name += ".zip";
+			Directory.CreateDirectory(ModsDir(context));
+			string dest = Path.Combine(ModsDir(context), name);
+			using Stream input = context.ContentResolver!.OpenInputStream(zipUri)
+				?? throw new InstallException("Não consegui abrir o arquivo.");
+			using FileStream output = File.Create(dest);
+			input.CopyTo(output);
+		}
+
+		private string? QueryDisplayName(Uri uri)
+		{
+			using ICursor? c = context.ContentResolver!.Query(uri, new[] { "_display_name" }, null, null, null);
+			if (c != null && c.MoveToFirst() && !c.IsNull(0))
+				return c.GetString(0);
+			return null;
+		}
+
+		#endregion
+
 		private void CopyAssetTree(string assetDir, string destDir)
 		{
 			Directory.CreateDirectory(destDir);

@@ -34,6 +34,7 @@ namespace CelesteAndroid
 		private const int RequestFolder = 1;
 		private const int RequestZip = 2;
 		private const int RequestSaves = 3;
+		private const int RequestMod = 4;
 		private const string PrefDriver = "driver";
 
 		private static readonly Color Night = Color.ParseColor("#120C22");
@@ -48,6 +49,7 @@ namespace CelesteAndroid
 		private TextView openZip = null!;
 		private TextView importSaves = null!;
 		private TextView driverToggle = null!;
+		private TextView manageMods = null!;
 		private LinearLayout links = null!;
 		private LinearLayout progressBox = null!;
 		private ProgressBar progressBar = null!;
@@ -175,6 +177,10 @@ namespace CelesteAndroid
 			importSaves.Click += (_, _) => StartActivityForResult(new Intent(Intent.ActionOpenDocumentTree), RequestSaves);
 			driverToggle = LinkText("");
 			driverToggle.Click += (_, _) => ToggleDriver();
+			manageMods = LinkText("Mods");
+			manageMods.Click += (_, _) => ShowModsDialog();
+			links.AddView(manageMods);
+			links.AddView(Text("·", 14, Color.Argb(120, 255, 255, 255), TypefaceStyle.Normal), Margins(left: 10, right: 10));
 			links.AddView(openZip);
 			links.AddView(Text("·", 14, Color.Argb(120, 255, 255, 255), TypefaceStyle.Normal), Margins(left: 10, right: 10));
 			links.AddView(importSaves);
@@ -350,6 +356,50 @@ namespace CelesteAndroid
 				RunInstall(installer => installer.ImportZip(uri));
 			else if (requestCode == RequestSaves)
 				RunJob(installer => $"✓  Imported {installer.ImportSaves(uri)} save file(s)");
+			else if (requestCode == RequestMod)
+				RunJob(installer => { installer.ImportMod(uri); return "✓  Mod importado! Abra MODS para carregar."; });
+		}
+
+		private void ShowModsDialog()
+		{
+			if (!GameInstaller.IsEverestInstalled(this))
+			{
+				status.Text = "Instale/abra o Everest (MODS) uma vez antes de gerenciar mods.";
+				return;
+			}
+			string[] mods = GameInstaller.ListMods(this);
+			var b = new AlertDialog.Builder(this);
+			b.SetTitle($"Mods instalados ({mods.Length})");
+			if (mods.Length == 0)
+				b.SetMessage("Nenhum mod ainda. Toque \"Importar .zip\" e escolha um mod baixado do GameBanana.");
+			else
+				b.SetItems(mods, (_, e) => ConfirmRemoveMod(mods[e.Which]));
+			b.SetPositiveButton("Importar .zip", (_, _) => PickMod());
+			b.SetNegativeButton("Fechar", (_, _) => { });
+			b.Show();
+		}
+
+		private void ConfirmRemoveMod(string name)
+		{
+			new AlertDialog.Builder(this)
+				.SetTitle("Remover mod?")
+				.SetMessage(name)
+				.SetPositiveButton("Remover", (_, _) =>
+				{
+					GameInstaller.UninstallMod(this, name);
+					status.Text = "✓  Removido: " + name;
+				})
+				.SetNegativeButton("Cancelar", (_, _) => { })
+				.Show();
+		}
+
+		private void PickMod()
+		{
+			var intent = new Intent(Intent.ActionOpenDocument);
+			intent.AddCategory(Intent.CategoryOpenable);
+			intent.SetType("*/*");
+			intent.PutExtra(Intent.ExtraMimeTypes, new[] { "application/zip", "application/x-zip-compressed", "application/octet-stream" });
+			StartActivityForResult(intent, RequestMod);
 		}
 
 		/// <summary>Importação do jogo: cópia → patch → fundo.</summary>
