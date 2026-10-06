@@ -44,8 +44,9 @@ namespace CelesteAndroid
 				.GetField("AssemblyDirectory", BindingFlags.NonPublic | BindingFlags.Static)!
 				.SetValue(null, gameDir);
 
+			// Vanilla: Main é nonpublic. Everest torna Main público (embrulha o orig_Main) → incluir Public.
 			MethodInfo main = celeste.GetType("Celeste.Celeste", throwOnError: true)!
-				.GetMethod("Main", BindingFlags.NonPublic | BindingFlags.Static)!;
+				.GetMethod("Main", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)!;
 			// --loglevel verbose: boot detalhado do Everest no logcat (equivale ao everest-launch.txt do desktop).
 			main.Invoke(null, new object[] { new[] { "--loglevel", "verbose" } });
 		}

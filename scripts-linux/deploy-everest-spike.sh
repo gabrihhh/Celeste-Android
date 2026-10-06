@@ -34,7 +34,8 @@ adb shell "run-as $PKG sh -c '[ -d files/Celeste/Content ]'" \
   || { echo "Content ausente em files/Celeste/ — rode $PARENT/scripts-linux/deploy-android.sh (reimporta o jogo) e repita."; exit 3; }
 
 adb logcat -c
-# .GameActivity é Exported=false; am start só funciona porque o APK é Debug (debuggable).
-adb shell am start -n "$PKG/.GameActivity"
-echo ">>> capturando boot do Everest..."
-timeout 40 adb logcat -s CelesteAndroid DOTNET Everest fmod SDL AndroidRuntime | grep -iE "everest|fatal|exception|mods|version" || true
+# .GameActivity é Exported=false e o adb (uid shell) não pode iniciá-la nem em Debug (SecurityException).
+# Lança a .LauncherActivity (exportada); o usuário toca PLAY, que inicia a GameActivity de dentro do app.
+adb shell am start -n "$PKG/.LauncherActivity"
+echo ">>> No tablet: toque PLAY. Capturando boot do Everest (60s)..."
+timeout 60 adb logcat -s CelesteAndroid DOTNET Everest fmod SDL AndroidRuntime | grep -iE "everest|fatal|exception|mods|version" || true
