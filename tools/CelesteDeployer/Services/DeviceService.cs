@@ -10,6 +10,15 @@ public record AndroidDevice(string Serial, string Model, bool Authorized)
 
 public partial class DeviceService
 {
+    private readonly AdbService _adb;
+    public DeviceService(AdbService adb) => _adb = adb;
+
+    public async Task<List<AndroidDevice>> ListAsync(CancellationToken ct)
+    {
+        var (_, stdout, _) = await _adb.RunAsync(null, new[] { "devices", "-l" }, null, ct);
+        return ParseDevices(stdout);
+    }
+
     public static List<AndroidDevice> ParseDevices(string adbOutput)
     {
         var result = new List<AndroidDevice>();
