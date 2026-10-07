@@ -35,7 +35,20 @@ namespace CelesteAndroid
 				AssemblyLoadContext.Default.Resolving += (ctx, name) =>
 				{
 					string candidate = Path.Combine(libsDir, name.Name + ".dll");
-					return File.Exists(candidate) ? ctx.LoadFromAssemblyPath(candidate) : null;
+					if (File.Exists(candidate))
+						return ctx.LoadFromAssemblyPath(candidate);
+
+					// Mods relinkados vivem no ALC próprio do Everest (EverestModuleAssemblyContext),
+					// não em everest-libs. Ao aplicar hooks (MonoMod.RuntimeDetour), o JIT do MonoVM
+					// resolve o assembly do mod pelo nome e cai aqui (open_from_bundles falha). Devolve
+					// a instância já carregada em qualquer ALC — sem isso o mod estoura
+					// "Could not load file or assembly 'XYZ'" ao aplicar o primeiro hook.
+					foreach (AssemblyLoadContext alc in AssemblyLoadContext.All)
+						foreach (Assembly loaded in alc.Assemblies)
+							if (loaded.GetName().Name == name.Name)
+								return loaded;
+
+					return null;
 				};
 				Directory.CreateDirectory(GameInstaller.ModsDir(context));   // o Everest espera Mods/
 				dll = GameInstaller.EverestPatchedDll(context);

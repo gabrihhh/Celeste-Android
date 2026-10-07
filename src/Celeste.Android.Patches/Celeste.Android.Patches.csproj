@@ -20,4 +20,9 @@
 	<ItemGroup Condition="'$(Spike)' == 'true'">
 		<Compile Remove="Monocle/patch_Engine.cs" />
 	</ItemGroup>
+	<!-- CecilShim só serve ao Relinker do Everest (build Spike). No patch vanilla on-device o
+	     MonoMod não tem o Mono.Cecil nas dependências e quebraria ao mesclar o tipo. -->
+	<ItemGroup Condition="'$(Spike)' != 'true'">
+		<Compile Remove="CecilShim.cs" />
+	</ItemGroup>
 </Project>
