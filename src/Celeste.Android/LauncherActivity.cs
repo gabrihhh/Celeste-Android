@@ -94,6 +94,11 @@ namespace CelesteAndroid
 				Intent.RemoveExtra("repatch");
 				RunInstall(_ => { });
 			}
+			// Deployer empurrou o jogo pra pasta externa do app → importa sozinho (sem SAF, sem permissão).
+			else if (!busy && !GameInstaller.IsInstalled(this) && HasDeployerGame())
+			{
+				RunInstall(installer => installer.ImportFromPath(DeployerGameDir()));
+			}
 			// APK pessoal: o jogo já vem dentro do APK; instala sozinho na primeira abertura.
 			else if (!busy && !GameInstaller.IsInstalled(this) && GameInstaller.HasEmbeddedGame(this))
 			{
@@ -105,6 +110,16 @@ namespace CelesteAndroid
 			{
 				RunJob(installer => { installer.ExtractEverestBundle(); return "✓  Everest pronto"; });
 			}
+		}
+
+		private string DeployerGameDir() =>
+			System.IO.Path.Combine(GetExternalFilesDir(null)!.AbsolutePath, "CelesteGame");
+
+		private bool HasDeployerGame()
+		{
+			string dir = DeployerGameDir();
+			return System.IO.File.Exists(System.IO.Path.Combine(dir, "Celeste.exe"))
+				&& System.IO.Directory.Exists(System.IO.Path.Combine(dir, "Content"));
 		}
 
 		#region Layout
