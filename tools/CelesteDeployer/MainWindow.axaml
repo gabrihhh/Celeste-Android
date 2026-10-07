@@ -2,8 +2,42 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        xmlns:services="using:CelesteDeployer.Services"
+        mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="340"
         x:Class="CelesteDeployer.MainWindow"
-        Title="CelesteDeployer">
-    Welcome to Avalonia!
+        Title="Celeste Android Deployer"
+        Width="460" Height="340"
+        CanResize="False">
+    <Grid Margin="20">
+        <StackPanel x:Name="SelectPanel" Spacing="10" IsVisible="True">
+            <TextBlock Text="Celeste Android Deployer" FontSize="18" FontWeight="Bold" Margin="0,0,0,10" />
+
+            <TextBlock Text="Pasta do jogo Celeste:" />
+            <DockPanel LastChildFill="True">
+                <Button x:Name="BrowseBtn" Content="Procurar" DockPanel.Dock="Right" Margin="8,0,0,0" />
+                <TextBox x:Name="GamePathBox" IsReadOnly="True" />
+            </DockPanel>
+
+            <TextBlock Text="Celular:" Margin="0,8,0,0" />
+            <DockPanel LastChildFill="True">
+                <Button x:Name="RefreshBtn" Content="Atualizar" DockPanel.Dock="Right" Margin="8,0,0,0" />
+                <ComboBox x:Name="DeviceCombo" HorizontalAlignment="Stretch" x:DataType="services:AndroidDevice" DisplayMemberBinding="{Binding Display}" />
+            </DockPanel>
+
+            <Button x:Name="InstallBtn" Content="Instalar" IsEnabled="False" HorizontalAlignment="Stretch" Margin="0,10,0,0" />
+
+            <TextBlock x:Name="HintText" Foreground="Red" TextWrapping="Wrap" />
+        </StackPanel>
+
+        <StackPanel x:Name="ProgressPanel" Spacing="12" IsVisible="False" VerticalAlignment="Center">
+            <ProgressBar IsIndeterminate="True" />
+            <TextBlock x:Name="StepText" HorizontalAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel x:Name="DonePanel" Spacing="12" IsVisible="False" VerticalAlignment="Center">
+            <TextBlock x:Name="DoneText" TextWrapping="Wrap" />
+            <Button x:Name="CloseBtn" Content="Fechar" HorizontalAlignment="Stretch" />
+            <Button x:Name="RetryBtn" Content="Tentar de novo" IsVisible="False" HorizontalAlignment="Stretch" />
+        </StackPanel>
+    </Grid>
 </Window>
