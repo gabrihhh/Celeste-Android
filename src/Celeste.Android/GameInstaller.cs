@@ -298,6 +298,21 @@ namespace CelesteAndroid
 			Directory.Move(staging, gameDir);
 		}
 
+		/// <summary>Importa o jogo de uma pasta local (ex.: a pasta externa do app, empurrada pelo Deployer).
+		/// Lê via File API (sem SAF). Após sucesso, apaga a pasta de origem para liberar espaço.</summary>
+		public void ImportFromPath(string sourceDir)
+		{
+			var files = new List<(string relative, long size, Func<Stream> open)>();
+			foreach (string path in Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories))
+			{
+				string rel = Path.GetRelativePath(sourceDir, path);
+				var info = new FileInfo(path);
+				files.Add((rel, info.Length, () => File.OpenRead(path)));
+			}
+			CopyAll(files);              // valida Celeste.exe+Content, faz staging→move pra GameDir
+			try { Directory.Delete(sourceDir, recursive: true); } catch { /* best-effort cleanup */ }
+		}
+
 		#endregion
 
 		#region Patch e fundo
