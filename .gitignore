@@ -37,3 +37,4 @@ obj/
 # Fork do MonoMod (clone externo grande) + helper nativo buildado (camada A.2)
 /external/MonoMod/
 /native/libs/
+tools/CelesteDeployer/dist/
