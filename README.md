@@ -7,6 +7,22 @@ CelesteAndroid is a launcher + runtime that takes the files of the Celeste PC ve
 > [!IMPORTANT]
 > **No game files are included.** This project doesn't include Celeste or any of its assets. You need a legally owned copy of Celeste for PC. The launcher imports it from your device, the same model PortMaster and other community ports use.
 
+## Download & install (easy way)
+
+Don't want to touch a terminal? Use the **Celeste Android Deployer** — a one‑click installer for Windows and Linux that installs the app and copies your PC Celeste to the phone automatically.
+
+<p>
+  <a href="https://github.com/gabrihhh/Celeste-Android/releases/latest/download/CelesteDeployer-windows.exe"><img src="https://img.shields.io/badge/Download-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows"></a>
+  &nbsp;
+  <a href="https://github.com/gabrihhh/Celeste-Android/releases/latest/download/default.CelesteDeployer-linux"><img src="https://img.shields.io/badge/Download-Linux-E95420?style=for-the-badge&logo=linux&logoColor=white" alt="Download for Linux"></a>
+</p>
+
+1. Download the installer for your OS and run it (self‑contained — no .NET needed).
+2. Plug in your phone with **USB debugging** on, and pick your Celeste PC folder + the phone.
+3. Click **Install** — the game opens on the phone and imports itself.
+
+More details in [`tools/CelesteDeployer`](tools/CelesteDeployer).
+
 ## Features
 
 - **Native**: the game runs on the .NET runtime for ARM64, with FNA, FNA3D and SDL3 built for Android.

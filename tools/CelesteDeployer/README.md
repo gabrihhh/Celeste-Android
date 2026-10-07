@@ -3,6 +3,12 @@
 Instalador gráfico (Windows/Linux) que coloca o **Celeste Android (com Everest)** no seu celular
 sem terminal. Você escolhe a pasta da sua cópia de PC do Celeste e o aparelho; ele faz o resto.
 
+<p>
+  <a href="https://github.com/gabrihhh/Celeste-Android/releases/latest/download/CelesteDeployer-windows.exe"><img src="https://img.shields.io/badge/Baixar-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Baixar para Windows"></a>
+  &nbsp;
+  <a href="https://github.com/gabrihhh/Celeste-Android/releases/latest/download/default.CelesteDeployer-linux"><img src="https://img.shields.io/badge/Baixar-Linux-E95420?style=for-the-badge&logo=linux&logoColor=white" alt="Baixar para Linux"></a>
+</p>
+
 ## Para o usuário final
 
 **Pré-requisitos:**
